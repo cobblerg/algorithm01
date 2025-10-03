@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일상 속 알고리즘 흐름도 만들기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+        }
+        .problem-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .problem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .step-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .step-item:hover {
+            background-color: #f0f9ff; /* light-blue-50 */
+        }
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">일상 속 알고리즘 흐름도 만들기</h1>
+            <p id="header-subtitle" class="text-md sm:text-lg text-gray-600">가장 먼저, 해결하고 싶은 문제를 선택해 주세요!</p>
+        </header>
+
+        <main id="main-content">
+            <!-- Problem Selection Screen -->
+            <section id="selection-screen">
+                <div id="problem-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Problem cards will be injected here -->
+                </div>
+            </section>
+
+            <!-- Sorting Activity Screen -->
+            <section id="sorting-screen" class="hidden">
+                 <div class="text-center mb-4">
+                    <button id="back-to-selection-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">다른 문제 선택하기</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-xl font-bold mb-4 text-center">섞여있는 단계들 (순서대로 클릭!)</h2>
+                        <div id="shuffled-steps" class="space-y-3 bg-gray-100 p-4 rounded-lg min-h-[300px]">
+                            <!-- Shuffled steps will appear here -->
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold mb-4 text-center">나의 알고리즘 순서</h2>
+                        <div id="sorted-steps" class="space-y-3 bg-blue-100 p-4 rounded-lg min-h-[300px]">
+                            <!-- User's sorted steps will appear here -->
+                        </div>
+                    </div>
+                </div>
+                <div id="message-box" class="text-center text-red-500 font-bold h-6 my-4"></div>
+                <div class="text-center mt-6">
+                    <button id="check-order-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        순서 확인하기
+                    </button>
+                     <button id="reset-btn" class="ml-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                        다시하기
+                    </button>
+                </div>
+            </section>
+
+            <!-- Flowchart Result Screen -->
+            <section id="flowchart-section" class="hidden mt-8">
+                 <div class="text-center mb-4">
+                    <button id="back-to-selection-btn-2" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">다른 문제 선택하기</button>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-green-600">🎉 정답! 완벽한 알고리즘이에요! 🎉</h2>
+                    <div id="flowchart-content" class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-2 flex-wrap">
+                        <!-- Flowchart will be injected here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loader Overlay -->
+    <div id="loader-overlay" class="loader-overlay hidden">
+        <div class="loader"></div>
+        <p class="mt-4 text-lg font-semibold text-gray-700">이미지를 생성하고 있어요. 잠시만 기다려 주세요...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const problems = [
+                {
+                    id: 'ramen',
+                    title: '컵라면 맛있게 끓이기 🍜',
+                    description: '출출할 때 생각나는 컵라면! 가장 맛있는 순서를 찾아보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "전기 포트에 물을 넣고 팔팔 끓여요.", prompt: "A simple, cute cartoon of an electric kettle boiling water with steam. White background." },
+                        { id: 2, order: 2, text: "컵라면 뚜껑을 열고 분말 스프를 넣어요.", prompt: "A simple, cute cartoon of putting soup powder into a cup noodle. White background." },
+                        { id: 3, order: 3, text: "뜨거운 물을 붓고 3분을 기다려요.", prompt: "A simple, cute cartoon of a cup noodle with a 3-minute sandglass timer next to it. White background." },
+                        { id: 4, order: 4, text: "잘 익은 라면을 맛있게 먹어요.", prompt: "A simple, cute cartoon of happily eating hot cup noodles with chopsticks. White background." }
+                    ]
+                },
+                {
+                    id: 'find-item',
+                    title: '잃어버린 물건 찾기 🔍',
+                    description: '앗, 내 물건 어디 갔지? 침착하게 물건을 찾는 순서를 맞춰보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "마지막으로 물건을 봤던 장소를 떠올려요.", prompt: "A simple, cute cartoon of a person thinking with a question mark thought bubble. White background." },
+                        { id: 2, order: 2, text: "물건을 뒀을 만한 곳의 목록을 만들어요.", prompt: "A simple, cute cartoon of a person writing a checklist on a notepad. White background." },
+                        { id: 3, order: 3, text: "목록에 적은 장소를 하나씩 확인해요.", prompt: "A simple, cute cartoon of a person looking for something under a sofa with a flashlight. White background." },
+                        { id: 4, order: 4, text: "물건을 찾았다면 제자리에 정리해요.", prompt: "A simple, cute cartoon of a person putting a found book back on a bookshelf neatly. White background." }
+                    ]
+                },
+                {
+                    id: 'school-prep',
+                    title: '학교 갈 준비하기 🎒',
+                    description: '지각은 안돼! 완벽한 등교 준비 순서를 완성해보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "일어나서 이불을 정리하고 세수해요.", prompt: "A simple, cute cartoon of a child washing their face in the morning, the sun is shining. White background." },
+                        { id: 2, order: 2, text: "교복이나 오늘 입을 옷을 챙겨 입어요.", prompt: "A simple, cute cartoon of a student putting on a clean school uniform. White background." },
+                        { id: 3, order: 3, text: "가방에 오늘 필요한 교과서와 준비물을 챙겨요.", prompt: "A simple, cute cartoon of putting books and pencils into a school backpack. White background." },
+                        { id: 4, order: 4, text: "아침밥을 든든하게 먹고 학교에 가요.", prompt: "A simple, cute cartoon of a child eating a healthy breakfast of toast and milk. White background." }
+                    ]
+                }
+            ];
+
+            const appState = {
+                currentView: 'selection', // 'selection', 'loading', 'sorting', 'result'
+                selectedProblem: null,
+                userSequence: [],
+                shuffledSteps: [],
+            };
+
+            const selectionScreen = document.getElementById('selection-screen');
+            const sortingScreen = document.getElementById('sorting-screen');
+            const flowchartSection = document.getElementById('flowchart-section');
+            const loaderOverlay = document.getElementById('loader-overlay');
+            const headerSubtitle = document.getElementById('header-subtitle');
+            
+            const shuffledStepsContainer = document.getElementById('shuffled-steps');
+            const sortedStepsContainer = document.getElementById('sorted-steps');
+            const messageBox = document.getElementById('message-box');
+            
+            function shuffleArray(array) {
+                return array.slice().sort(() => Math.random() - 0.5);
+            }
+
+            async function generateImageWithRetry(prompt, maxRetries = 3) {
+                // ... (API call logic remains the same, no changes needed here)
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                const payload = { instances: [{ prompt }], parameters: { "sampleCount": 1 } };
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        const result = await response.json();
+                        if (result.predictions && result.predictions[0].bytesBase64Encoded) {
+                            return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                        }
+                        throw new Error("Invalid API response.");
+                    } catch (error) {
+                        console.error(`Attempt ${i + 1} failed:`, error);
+                        if (i === maxRetries - 1) throw error;
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    }
+                }
+                return null;
+            }
+
+            function renderStepItem(step, isShuffled) {
+                return `
+                    <div class="step-item bg-white p-3 rounded-lg shadow-md flex items-center gap-4" data-id="${step.id}" data-is-shuffled="${isShuffled}">
+                        <img src="${step.imageUrl}" alt="${step.text}" class="w-16 h-16 rounded-md object-cover flex-shrink-0">
+                        <p class="flex-grow">${step.text}</p>
+                    </div>
+                `;
+            }
+
+            function render() {
+                selectionScreen.classList.toggle('hidden', appState.currentView !== 'selection');
+                sortingScreen.classList.toggle('hidden', appState.currentView !== 'sorting');
+                flowchartSection.classList.toggle('hidden', appState.currentView !== 'result');
+                loaderOverlay.classList.toggle('hidden', appState.currentView !== 'loading');
+
+                if (appState.currentView === 'selection') {
+                    headerSubtitle.textContent = '가장 먼저, 해결하고 싶은 문제를 선택해 주세요!';
+                    const problemList = document.getElementById('problem-list');
+                    problemList.innerHTML = problems.map(p => `
+                        <div class="problem-card bg-white p-6 rounded-xl shadow-md cursor-pointer" data-id="${p.id}">
+                            <h2 class="text-2xl font-bold mb-2 text-blue-600">${p.title}</h2>
+                            <p class="text-gray-600">${p.description}</p>
+                        </div>
+                    `).join('');
+                } else if (appState.currentView === 'sorting') {
+                    headerSubtitle.textContent = `문제: ${appState.selectedProblem.title}`;
+                    
+                    const availableSteps = appState.shuffledSteps.filter(step => !appState.userSequence.some(s => s.id === step.id));
+                    shuffledStepsContainer.innerHTML = availableSteps.map(step => renderStepItem(step, true)).join('');
+                    sortedStepsContainer.innerHTML = appState.userSequence.map(step => renderStepItem(step, false)).join('');
+
+                } else if (appState.currentView === 'result') {
+                     headerSubtitle.textContent = '흐름도 완성!';
+                     const flowchartContent = document.getElementById('flowchart-content');
+                     flowchartContent.innerHTML = '';
+                     appState.userSequence.forEach((step, index) => {
+                         flowchartContent.innerHTML += `
+                            <div class="flex flex-col items-center text-center mx-2">
+                                <div class="w-32 h-32 rounded-full border-4 border-blue-400 p-1 shadow-lg overflow-hidden mb-2">
+                                     <img src="${step.imageUrl}" alt="${step.text}" class="w-full h-full object-cover rounded-full">
+                                </div>
+                                <p class="font-semibold">${step.text}</p>
+                            </div>
+                         `;
+                         if (index < appState.userSequence.length - 1) {
+                            flowchartContent.innerHTML += `
+                                <div class="transform md:rotate-0 rotate-90 my-2 md:my-0">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                </div>`;
+                         }
+                     });
+                }
+            }
+
+            async function selectProblem(problemId) {
+                appState.selectedProblem = problems.find(p => p.id === problemId);
+                if (!appState.selectedProblem) return;
+
+                appState.currentView = 'loading';
+                render();
+
+                try {
+                    const imagePromises = appState.selectedProblem.steps.map(step => 
+                        step.imageUrl ? Promise.resolve(step.imageUrl) : generateImageWithRetry(step.prompt)
+                    );
+                    const imageUrls = await Promise.all(imagePromises);
+                    
+                    appState.selectedProblem.steps.forEach((step, index) => {
+                        step.imageUrl = imageUrls[index];
+                    });
+
+                    appState.shuffledSteps = shuffleArray(appState.selectedProblem.steps);
+                    appState.userSequence = [];
+                    messageBox.textContent = '';
+                    appState.currentView = 'sorting';
+                } catch (error) {
+                    console.error("Failed to generate images:", error);
+                    alert("이미지 생성에 실패했습니다. 다시 시도해 주세요.");
+                    appState.currentView = 'selection';
+                }
+                render();
+            }
+            
+            document.getElementById('main-content').addEventListener('click', e => {
+                const problemCard = e.target.closest('.problem-card');
+                if (problemCard) {
+                    selectProblem(problemCard.dataset.id);
+                }
+                
+                const stepItem = e.target.closest('.step-item');
+                if (stepItem) {
+                    const stepId = parseInt(stepItem.dataset.id);
+                    const isShuffled = stepItem.dataset.isShuffled === 'true';
+                    messageBox.textContent = '';
+                    
+                    if (isShuffled) {
+                        const step = appState.shuffledSteps.find(s => s.id === stepId);
+                        appState.userSequence.push(step);
+                    } else {
+                        appState.userSequence = appState.userSequence.filter(s => s.id !== stepId);
+                    }
+                    render();
+                }
+            });
+
+            document.getElementById('check-order-btn').addEventListener('click', () => {
+                if (appState.userSequence.length !== appState.selectedProblem.steps.length) {
+                    messageBox.textContent = '모든 단계를 순서에 맞게 옮겨주세요!';
+                    return;
+                }
+                
+                const isCorrect = appState.userSequence.every((step, index) => step.order === index + 1);
+
+                if (isCorrect) {
+                    appState.currentView = 'result';
+                    render();
+                } else {
+                    messageBox.textContent = '앗, 순서가 맞지 않아요. 다시 생각해 보세요!';
+                }
+            });
+            
+             document.getElementById('reset-btn').addEventListener('click', () => {
+                appState.userSequence = [];
+                messageBox.textContent = '';
+                render();
+            });
+
+            document.addEventListener('click', e => {
+                if (e.target.id === 'back-to-selection-btn' || e.target.id === 'back-to-selection-btn-2') {
+                    appState.currentView = 'selection';
+                    appState.selectedProblem = null;
+                    appState.userSequence = [];
+                    appState.shuffledSteps = [];
+                    render();
+                }
+            });
+
+            // Initial render
+            render();
+        });
+    </script>
+
+</body>
+</html>
+
