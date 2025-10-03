@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일상 속 알고리즘 흐름도 만들기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+        }
+        .step-arrow {
+            font-size: 2.5rem;
+            color: #9CA3AF;
+            line-height: 1;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">일상 속 알고리즘 흐름도 만들기</h1>
+            <p class="text-md sm:text-lg text-gray-600">컵라면 끓이기를 통해 알고리즘의 순서를 배워봐요!</p>
+        </header>
+
+        <main>
+            <!-- Problem Section -->
+            <section id="problem-section" class="bg-white p-6 rounded-xl shadow-md mb-8">
+                <h2 class="text-2xl font-bold mb-3 text-gray-700">오늘의 문제: 컵라면 맛있게 끓이기 🍜</h2>
+                <p class="text-gray-600">
+                    출출할 때 가장 먼저 생각나는 컵라면! 간단해 보이지만, 가장 맛있는 컵라면을 만들기 위한 최적의 순서가 있답니다.
+                    아래 단계를 따라가며 각 장면에 어울리는 이미지를 만들고, 나만의 흐름도를 완성해 보세요.
+                </p>
+            </section>
+
+            <!-- Steps Section -->
+            <section id="steps-section" class="space-y-6 mb-8">
+                <!-- Steps will be injected here by JavaScript -->
+            </section>
+            
+            <!-- Flowchart Button -->
+            <div id="flowchart-button-container" class="text-center mb-8 hidden">
+                 <button id="complete-flowchart-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none" disabled>
+                    흐름도 완성하기
+                </button>
+            </div>
+
+            <!-- Flowchart Section -->
+            <section id="flowchart-section" class="bg-white p-6 rounded-xl shadow-md hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">✨ 완성된 컵라면 알고리즘 흐름도 ✨</h2>
+                <div id="flowchart-content" class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                    <!-- Flowchart will be injected here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            <p>알고리즘 학습을 위한 교육용 프로그램입니다.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appState = {
+                steps: [
+                    {
+                        id: 1,
+                        title: "1단계: 물 끓이기",
+                        description: "전기 포트에 물을 넣고 팔팔 끓여요.",
+                        prompt: "A simple, cute cartoon illustration of a modern electric kettle boiling water with a lot of steam coming out. White background.",
+                        imageUrl: null,
+                        isLoading: false,
+                    },
+                    {
+                        id: 2,
+                        title: "2단계: 스프 넣기",
+                        description: "컵라면 뚜껑을 열고 분말 스프를 먼저 넣어요.",
+                        prompt: "A simple, cute cartoon illustration of opening a cup noodle lid and pouring the soup powder packet into it. White background.",
+                        imageUrl: null,
+                        isLoading: false,
+                    },
+                    {
+                        id: 3,
+                        title: "3단계: 기다리기",
+                        description: "뜨거운 물을 붓고 뚜껑을 닫은 뒤 3분을 기다려요.",
+                        prompt: "A simple, cute cartoon illustration of a cup noodle with the lid closed by chopsticks, with a 3-minute sandglass timer next to it. White background.",
+                        imageUrl: null,
+                        isLoading: false,
+                    },
+                    {
+                        id: 4,
+                        title: "4단계: 맛있게 먹기",
+                        description: "잘 익은 라면을 젓가락으로 저어 맛있게 먹어요.",
+                        prompt: "A simple, cute cartoon illustration of happily eating delicious, steaming hot cup noodles with chopsticks. White background.",
+                        imageUrl: null,
+                        isLoading: false,
+                    }
+                ],
+                allImagesGenerated: false,
+            };
+
+            const stepsSection = document.getElementById('steps-section');
+            const flowchartButtonContainer = document.getElementById('flowchart-button-container');
+            const completeFlowchartBtn = document.getElementById('complete-flowchart-btn');
+            const flowchartSection = document.getElementById('flowchart-section');
+            const flowchartContent = document.getElementById('flowchart-content');
+
+            function render() {
+                stepsSection.innerHTML = '';
+                appState.steps.forEach((step, index) => {
+                    const stepEl = document.createElement('div');
+                    stepEl.className = 'bg-white p-5 rounded-xl shadow-md flex flex-col sm:flex-row items-center gap-4';
+                    stepEl.innerHTML = `
+                        <div class="flex-grow">
+                            <h3 class="text-xl font-bold text-blue-500">${step.title}</h3>
+                            <p class="text-gray-600">${step.description}</p>
+                        </div>
+                        <div class="flex-shrink-0 w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            ${
+                                step.isLoading 
+                                ? `<div class="loader"></div>` 
+                                : step.imageUrl 
+                                ? `<img src="${step.imageUrl}" alt="${step.title}" class="w-full h-full object-cover">`
+                                : `<div class="text-gray-400 text-center p-2">이미지를 생성해 주세요</div>`
+                            }
+                        </div>
+                        <button data-index="${index}" class="generate-btn w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" ${step.imageUrl ? 'disabled' : ''}>
+                            ${step.imageUrl ? '생성 완료' : '이미지 생성'}
+                        </button>
+                    `;
+                    stepsSection.appendChild(stepEl);
+                });
+
+                // Check if all images are generated
+                appState.allImagesGenerated = appState.steps.every(step => step.imageUrl);
+
+                if (appState.allImagesGenerated) {
+                    flowchartButtonContainer.classList.remove('hidden');
+                    completeFlowchartBtn.disabled = false;
+                } else {
+                    flowchartButtonContainer.classList.add('hidden');
+                    completeFlowchartBtn.disabled = true;
+                }
+            }
+
+            async function generateImageWithRetry(prompt, maxRetries = 3) {
+                const apiKey = ""; // API key is handled by the environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                const payload = { 
+                    instances: [{ prompt: prompt }],
+                    parameters: { "sampleCount": 1 }
+                };
+
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        
+                        if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                            return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                        } else {
+                            throw new Error("Invalid response structure from API.");
+                        }
+                    } catch (error) {
+                        console.error(`Attempt ${i + 1} failed:`, error);
+                        if (i === maxRetries - 1) {
+                            throw error; // Rethrow error after last attempt
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i))); // Exponential backoff
+                    }
+                }
+                return null;
+            }
+
+            stepsSection.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('generate-btn')) {
+                    const index = parseInt(e.target.dataset.index, 10);
+                    if (appState.steps[index].isLoading || appState.steps[index].imageUrl) {
+                        return;
+                    }
+                    
+                    appState.steps[index].isLoading = true;
+                    render();
+
+                    try {
+                        const imageUrl = await generateImageWithRetry(appState.steps[index].prompt);
+                        if (imageUrl) {
+                            appState.steps[index].imageUrl = imageUrl;
+                        } else {
+                            alert("이미지 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+                        }
+                    } catch (error) {
+                        console.error("Image generation failed:", error);
+                        alert("이미지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                    } finally {
+                        appState.steps[index].isLoading = false;
+                        render();
+                    }
+                }
+            });
+
+            completeFlowchartBtn.addEventListener('click', () => {
+                flowchartSection.classList.remove('hidden');
+                flowchartContent.innerHTML = '';
+                
+                appState.steps.forEach((step, index) => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex flex-col items-center text-center w-full md:w-auto';
+                    itemEl.innerHTML = `
+                        <div class="w-40 h-40 rounded-full border-4 border-blue-400 p-1 shadow-lg overflow-hidden mb-2">
+                             <img src="${step.imageUrl}" alt="${step.title}" class="w-full h-full object-cover rounded-full">
+                        </div>
+                        <p class="font-semibold">${step.description}</p>
+                    `;
+                    flowchartContent.appendChild(itemEl);
+
+                    if (index < appState.steps.length - 1) {
+                        const arrowEl = document.createElement('div');
+                        arrowEl.className = 'step-arrow transform md:-rotate-90';
+                        arrowEl.innerHTML = `
+                            <svg class="w-8 h-8 text-gray-400 md:w-12 md:h-12 md:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        `;
+                        flowchartContent.appendChild(arrowEl);
+                    }
+                });
+
+                flowchartSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Initial render
+            render();
+        });
+    </script>
+
+</body>
+</html>
