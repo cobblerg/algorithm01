@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일상 생활 속 알고리즘 흐름도 만들기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .problem-card {
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            border: 3px solid transparent;
+        }
+        .problem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .problem-card.selected {
+            border-color: #3b82f6; /* blue-500 */
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+        }
+        .step-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .step-item:hover {
+            background-color: #f0f9ff; /* light-blue-50 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">일상 생활 속 알고리즘 흐름도 만들기</h1>
+            <p id="header-subtitle" class="text-md sm:text-lg text-gray-600">가장 먼저, 해결하고 싶은 문제를 선택해 주세요!</p>
+        </header>
+
+        <main id="main-content">
+            <!-- Problem Selection Section -->
+            <section id="problem-selection-section" class="mb-8">
+                <div id="problem-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Problem cards will be injected here -->
+                </div>
+            </section>
+
+            <!-- Sorting Activity Section -->
+            <section id="sorting-activity-section" class="hidden mb-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-xl font-bold mb-4 text-center">섞여있는 단계들 (순서대로 클릭!)</h2>
+                        <div id="shuffled-steps" class="space-y-3 bg-gray-100 p-4 rounded-lg min-h-[300px]"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold mb-4 text-center">나의 알고리즘 순서</h2>
+                        <div id="sorted-steps" class="space-y-3 bg-blue-100 p-4 rounded-lg min-h-[300px]"></div>
+                    </div>
+                </div>
+                <div id="message-box" class="text-center font-bold h-6 my-4"></div>
+                <div class="text-center mt-6 flex flex-wrap justify-center items-center gap-4">
+                    <button id="check-order-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                        순서 확인하기
+                    </button>
+                     <button id="reset-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                        다시하기
+                    </button>
+                    <button id="hint-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        힌트 보기💡
+                    </button>
+                </div>
+            </section>
+
+            <!-- Flowchart Result Section -->
+            <section id="flowchart-section" class="hidden mt-8">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-green-600">🎉 정답! 완벽한 알고리즘이에요! 🎉</h2>
+                    <div id="flowchart-content" class="flex flex-col md:flex-row items-stretch justify-center space-y-4 md:space-y-0 md:space-x-2"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const problems = [
+                {
+                    id: 'ramen',
+                    title: '컵라면 맛있게 끓이기 🍜',
+                    description: '출출할 때 생각나는 컵라면! 가장 맛있는 순서를 찾아보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "🔥 전기 포트에 물을 넣고 팔팔 끓여요." },
+                        { id: 2, order: 2, text: "🧂 컵라면 뚜껑을 열고 분말 스프를 넣어요." },
+                        { id: 3, order: 3, text: "⏳ 뜨거운 물을 붓고 3분을 기다려요." },
+                        { id: 4, order: 4, text: "😋 잘 익은 라면을 맛있게 먹어요." }
+                    ]
+                },
+                {
+                    id: 'find-item',
+                    title: '잃어버린 물건 찾기 🔍',
+                    description: '앗, 내 물건 어디 갔지? 침착하게 물건을 찾는 순서를 맞춰보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "🤔 마지막으로 물건을 봤던 장소를 떠올려요." },
+                        { id: 2, order: 2, text: "📝 물건을 뒀을 만한 곳의 목록을 만들어요." },
+                        { id: 3, order: 3, text: "👀 목록에 적은 장소를 하나씩 확인해요." },
+                        { id: 4, order: 4, text: "👍 물건을 찾았다면 제자리에 정리해요." }
+                    ]
+                },
+                {
+                    id: 'school-prep',
+                    title: '학교 갈 준비하기 🎒',
+                    description: '지각은 안돼! 완벽한 등교 준비 순서를 완성해보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "☀️ 일어나서 이불을 정리해요." },
+                        { id: 2, order: 2, text: "🧼 세수해요." },
+                        { id: 3, order: 3, text: "👕 가방에 준비물을 챙기고 옷을 입어요." },
+                        { id: 4, order: 4, text: "🍚 아침밥을 든든하게 먹고 학교에 가요." }
+                    ]
+                },
+                {
+                    id: 'brush-teeth',
+                    title: '양치하기 🦷',
+                    description: '치카치카! 충치 예방을 위한 올바른 양치 순서를 알아봐요.',
+                    steps: [
+                        { id: 1, order: 1, text: "🧴 칫솔에 치약을 짜요." },
+                        { id: 2, order: 2, text: "🪥 구석구석 꼼꼼히 칫솔질해요." },
+                        { id: 3, order: 3, text: "💧 물을 묻혀 입안을 헹궈요." },
+                        { id: 4, order: 4, text: "🚿 사용한 칫솔을 깨끗이 헹궈요." }
+                    ]
+                },
+                {
+                    id: 'recycling',
+                    title: '분리수거하기 ♻️',
+                    description: '지구를 지키는 작은 실천! 올바른 분리수거 순서를 맞춰봐요.',
+                    steps: [
+                        { id: 1, order: 1, text: "💧 내용물을 비우고 깨끗하게 헹궈요." },
+                        { id: 2, order: 2, text: "🏷️ 겉에 붙은 라벨이나 스티커를 떼요." },
+                        { id: 3, order: 3, text: "📊 종류별로(플라스틱, 캔, 종이) 나눠요." },
+                        { id: 4, order: 4, text: "🗑️ 지정된 분리수거함에 넣어요." }
+                    ]
+                },
+                {
+                    id: 'sandwich',
+                    title: '샌드위치 만들기 🥪',
+                    description: '맛있는 샌드위치를 만드는 황금 레시피 순서를 찾아보세요.',
+                    steps: [
+                        { id: 1, order: 1, text: "🥬 빵, 채소, 햄 등 재료를 준비해요." },
+                        { id: 2, order: 2, text: "🥪 빵 위에 준비된 재료들을 차곡차곡 올려요." },
+                        { id: 3, order: 3, text: "🥫 원하는 소스를 골고루 뿌려요." },
+                        { id: 4, order: 4, text: "😋 남은 빵 한 쪽으로 덮어 완성해요." }
+                    ]
+                }
+            ];
+
+            const appState = {
+                selectedProblem: null,
+                userSequence: [],
+                shuffledSteps: [],
+                isCorrect: false,
+            };
+
+            const problemListContainer = document.getElementById('problem-list');
+            const sortingActivitySection = document.getElementById('sorting-activity-section');
+            const flowchartSection = document.getElementById('flowchart-section');
+            const shuffledStepsContainer = document.getElementById('shuffled-steps');
+            const sortedStepsContainer = document.getElementById('sorted-steps');
+            const messageBox = document.getElementById('message-box');
+            const hintBtn = document.getElementById('hint-btn');
+
+            function shuffleArray(array) {
+                return array.slice().sort(() => Math.random() - 0.5);
+            }
+
+            function renderStepItem(step, isShuffled) {
+                return `
+                    <div class="step-item bg-white p-4 rounded-lg shadow-md flex items-center" data-id="${step.id}" data-is-shuffled="${isShuffled}">
+                        <p class="flex-grow">${step.text}</p>
+                    </div>
+                `;
+            }
+
+            function renderProblemList() {
+                problemListContainer.innerHTML = problems.map(p => `
+                    <div class="problem-card bg-white p-6 rounded-xl shadow-md cursor-pointer ${appState.selectedProblem?.id === p.id ? 'selected' : ''}" data-id="${p.id}">
+                        <h2 class="text-2xl font-bold mb-2 text-blue-600">${p.title}</h2>
+                        <p class="text-gray-600">${p.description}</p>
+                    </div>
+                `).join('');
+            }
+            
+            function renderSortingActivity() {
+                if (appState.selectedProblem) {
+                    sortingActivitySection.classList.remove('hidden');
+                    const availableSteps = appState.shuffledSteps.filter(step => !appState.userSequence.some(s => s.id === step.id));
+                    shuffledStepsContainer.innerHTML = availableSteps.map(step => renderStepItem(step, true)).join('');
+                    sortedStepsContainer.innerHTML = appState.userSequence.map(step => renderStepItem(step, false)).join('');
+                } else {
+                    sortingActivitySection.classList.add('hidden');
+                }
+            }
+            
+            function renderFlowchart() {
+                 if (appState.isCorrect) {
+                    flowchartSection.classList.remove('hidden');
+                    const flowchartContent = document.getElementById('flowchart-content');
+                    flowchartContent.innerHTML = '';
+                    appState.userSequence.forEach((step, index) => {
+                        flowchartContent.innerHTML += `
+                            <div class="flex flex-col items-center text-center mx-1 flex-1 min-w-0">
+                                <div class="bg-white p-3 rounded-lg shadow-md border-2 border-blue-400 w-full h-full flex items-center justify-center">
+                                    <p class="font-semibold text-sm md:text-base">${step.text}</p>
+                                </div>
+                            </div>
+                         `;
+                        if (index < appState.userSequence.length - 1) {
+                           flowchartContent.innerHTML += `
+                                <div class="transform md:rotate-0 rotate-90 my-2 md:my-0 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                </div>`;
+                        }
+                    });
+                } else {
+                    flowchartSection.classList.add('hidden');
+                }
+            }
+
+            function selectProblem(problemId) {
+                appState.selectedProblem = problems.find(p => p.id === problemId);
+                if (!appState.selectedProblem) return;
+
+                appState.userSequence = [];
+                appState.isCorrect = false;
+                messageBox.textContent = '';
+                hintBtn.disabled = false;
+                flowchartSection.classList.add('hidden');
+                appState.shuffledSteps = shuffleArray(appState.selectedProblem.steps);
+                
+                renderProblemList();
+                renderSortingActivity();
+                sortingActivitySection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            problemListContainer.addEventListener('click', e => {
+                const problemCard = e.target.closest('.problem-card');
+                if (problemCard) {
+                    selectProblem(problemCard.dataset.id);
+                }
+            });
+
+            sortingActivitySection.addEventListener('click', e => {
+                const stepItem = e.target.closest('.step-item');
+                if (stepItem) {
+                    const stepId = parseInt(stepItem.dataset.id);
+                    const isShuffled = stepItem.dataset.isShuffled === 'true';
+                    messageBox.textContent = '';
+                    
+                    if (isShuffled) {
+                        const step = appState.shuffledSteps.find(s => s.id === stepId);
+                        appState.userSequence.push(step);
+                    } else {
+                        appState.userSequence = appState.userSequence.filter(s => s.id !== stepId);
+                    }
+                    appState.isCorrect = false;
+                    renderSortingActivity();
+                }
+            });
+
+            document.getElementById('check-order-btn').addEventListener('click', () => {
+                if (!appState.selectedProblem) return;
+                if (appState.userSequence.length !== appState.selectedProblem.steps.length) {
+                    messageBox.classList.add('text-red-500');
+                    messageBox.textContent = '모든 단계를 순서에 맞게 옮겨주세요!';
+                    return;
+                }
+                
+                const isCorrectCheck = appState.userSequence.every((step, index) => step.order === index + 1);
+
+                if (isCorrectCheck) {
+                    appState.isCorrect = true;
+                    messageBox.textContent = '';
+                    renderFlowchart();
+                    flowchartSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    appState.isCorrect = false;
+                    messageBox.classList.add('text-red-500');
+                    messageBox.textContent = '앗, 순서가 맞지 않아요. 다시 생각해 보세요!';
+                }
+            });
+            
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                if (!appState.selectedProblem) return;
+                appState.userSequence = [];
+                appState.isCorrect = false;
+                messageBox.textContent = '';
+                hintBtn.disabled = false;
+                flowchartSection.classList.add('hidden');
+                renderSortingActivity();
+            });
+
+            hintBtn.addEventListener('click', () => {
+                if (!appState.selectedProblem) return;
+                
+                const nextStepOrder = appState.userSequence.length + 1;
+                const nextStep = appState.selectedProblem.steps.find(s => s.order === nextStepOrder);
+                
+                if (nextStep) {
+                    messageBox.classList.remove('text-red-500', 'text-green-500');
+                    messageBox.classList.add('text-blue-500');
+                    messageBox.textContent = `힌트: ${nextStepOrder}번째 단계는 "${nextStep.text}" 입니다.`;
+                } else {
+                    messageBox.classList.remove('text-red-500', 'text-blue-500');
+                    messageBox.classList.add('text-green-500');
+                    messageBox.textContent = '모든 순서를 맞춘 것 같아요! 순서 확인하기 버튼을 눌러보세요.';
+                }
+            });
+            
+            // --- App Initialization ---
+            renderProblemList();
+        });
+    </script>
+
+</body>
+</html>
+
